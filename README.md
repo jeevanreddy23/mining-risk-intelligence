@@ -1,5 +1,11 @@
 # mining-risk-intelligence
 
+![Status](https://img.shields.io/badge/status-prototype-b85c38)
+![Region](https://img.shields.io/badge/region-Laverton%20WA-2d6a73)
+![Deployment](https://img.shields.io/badge/deployment-Raspberry%20Pi%205-4c956c)
+![Model](https://img.shields.io/badge/model-tabular%20ML-5b5f97)
+![Validation](https://img.shields.io/badge/validation-White%20Reality%20Check-8a5a44)
+
 > "Context is not just the single prompt users send to an LLM. Context is the complete information payload provided to a model at inference time."  
 > Adapted to this project: geology, structures, seismicity, blast response, rock quality, memory, and control logic must be treated as one operating system for decision support.
 
@@ -113,6 +119,23 @@ This cycle is the operating loop of the project:
 - lock the feature contract
 - deliver inference
 - refine the system
+
+---
+
+## Deployment Flow
+
+```mermaid
+flowchart LR
+    A["Public datasets<br/>DMIRS / WAMEX / GA"] --> B["Training and validation<br/>local workstation"]
+    B --> C["Saved model + feature contract<br/>joblib + json"]
+    C --> D["FastAPI inference service"]
+    D --> E["Local dashboard<br/>engineer review"]
+    D --> F["Edge gateway<br/>Raspberry Pi 5"]
+    F --> G["Future mine feeds<br/>PPV / blast / microseismic"]
+    G --> D
+```
+
+This deployment view shows how the current prototype can move from desktop validation toward edge-style decision support.
 
 ---
 
