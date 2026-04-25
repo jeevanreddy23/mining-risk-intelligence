@@ -24,6 +24,7 @@ CLASSIFICATION_REPORT_PATH = DATA_DIR / 'classification_report.json'
 MODEL_COMPARISON_PATH = DATA_DIR / 'model_comparison.json'
 TEST_PREDICTIONS_PATH = DATA_DIR / 'test_predictions.csv'
 FEATURE_IMPORTANCE_PATH = DATA_DIR / 'feature_importance.csv'
+FEATURE_CONTRACT_PATH = DATA_DIR / 'feature_contract.json'
 
 
 RESEARCH_NOTES = {
@@ -47,6 +48,19 @@ def _split_columns(df: pd.DataFrame, target_col: str) -> tuple[list[str], list[s
     numeric_cols = feature_df.select_dtypes(include=['number', 'bool']).columns.tolist()
     categorical_cols = [col for col in feature_df.columns if col not in numeric_cols]
     return numeric_cols, categorical_cols
+
+
+def _build_feature_contract(df: pd.DataFrame, feature_cols: list[str]) -> dict[str, Any]:
+    contract: dict[str, Any] = {"feature_order": feature_cols, "defaults": {}, "dtypes": {}}
+    for col in feature_cols:
+        series = df[col]
+        contract["dtypes"][col] = str(series.dtype)
+        if pd.api.types.is_numeric_dtype(series):
+            contract["defaults"][col] = float(series.dropna().median()) if series.notna().any() else 0.0
+        else:
+            mode = series.dropna().astype(str).mode()
+            contract["defaults"][col] = str(mode.iloc[0]) if not mode.empty else ""
+    return contract
 
 
 def _build_preprocessor(numeric_cols: list[str], categorical_cols: list[str]) -> ColumnTransformer:
@@ -114,7 +128,9 @@ def train_and_save_model(dataset_path: Path | None = None) -> dict[str, Any]:
     if 'target_label' not in dataset.columns:
         raise ValueError('Expected target_label column in final training table.')
 
-    x = dataset.drop(columns=['target_label'])
+    feature_frame = dataset.drop(columns=['target_label'])
+    feature_frame = feature_frame.dropna(axis=1, how='all')
+    x = feature_frame.copy()
     y = dataset['target_label'].astype(str)
 
     numeric_cols, categorical_cols = _split_columns(dataset, 'target_label')
@@ -196,11 +212,13 @@ def train_and_save_model(dataset_path: Path | None = None) -> dict[str, Any]:
         prediction_df['prediction_confidence'] = best_probabilities.max(axis=1)
 
     feature_importance_df = _extract_feature_importance(best_pipeline)
+    feature_contract = _build_feature_contract(feature_frame, feature_frame.columns.tolist())
 
     joblib.dump(best_pipeline, MODEL_PATH)
     METRICS_PATH.write_text(json.dumps(metrics, indent=2), encoding='utf-8')
     CLASSIFICATION_REPORT_PATH.write_text(json.dumps(report, indent=2), encoding='utf-8')
     MODEL_COMPARISON_PATH.write_text(json.dumps(comparison, indent=2), encoding='utf-8')
+    FEATURE_CONTRACT_PATH.write_text(json.dumps(feature_contract, indent=2), encoding='utf-8')
     prediction_df.to_csv(TEST_PREDICTIONS_PATH, index=False)
     if feature_importance_df is not None:
         feature_importance_df.to_csv(FEATURE_IMPORTANCE_PATH, index=False)

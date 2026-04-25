@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import joblib
+import json
 import pandas as pd
 
 from .config import MODEL_PATH
+from .training import FEATURE_CONTRACT_PATH
 
 
 ALERT_MAP = {
@@ -20,6 +22,14 @@ def load_model():
 
         train_and_save_model()
     return joblib.load(MODEL_PATH)
+
+
+def load_feature_contract() -> dict[str, object]:
+    if not FEATURE_CONTRACT_PATH.exists():
+        from .training import train_and_save_model
+
+        train_and_save_model()
+    return json.loads(FEATURE_CONTRACT_PATH.read_text(encoding='utf-8'))
 
 
 def _confidence_label(confidence: float) -> str:
@@ -46,7 +56,12 @@ def _build_failure_mechanism(predicted_label: str, packet: dict[str, float]) -> 
 
 def score_packet(packet: dict[str, float]) -> dict[str, object]:
     model = load_model()
-    row = pd.DataFrame([packet])
+    contract = load_feature_contract()
+    defaults: dict[str, object] = contract['defaults']  # type: ignore[index]
+    feature_order: list[str] = contract['feature_order']  # type: ignore[index]
+
+    row_data = {name: packet.get(name, defaults.get(name)) for name in feature_order}
+    row = pd.DataFrame([row_data], columns=feature_order)
 
     predicted_label = str(model.predict(row)[0])
     probabilities = {}
@@ -66,11 +81,19 @@ def score_packet(packet: dict[str, float]) -> dict[str, object]:
         'Alert Level': alert_level,
         'Failure Mechanism': _build_failure_mechanism(predicted_label, packet),
         'Key Indicators': {
-            'PPV': f"{packet['synthetic_ppv_mm_s']:.1f} mm/s",
-            'Seismic Energy': f"M{packet['synthetic_seismic_magnitude']:.2f} at {packet['synthetic_seismic_depth_m']:.0f} m",
-            'Rock Mass Condition': f"RQD {packet['synthetic_inferred_rqd']:.0f}, GSI {packet['synthetic_inferred_gsi']:.0f}, structure distance {packet['synthetic_distance_to_structure_m']:.0f} m",
+            'PPV': f"{float(row_data.get('synthetic_ppv_mm_s', 0.0)):.1f} mm/s",
+            'Seismic Energy': f"M{float(row_data.get('synthetic_seismic_magnitude', 0.0)):.2f} at {float(row_data.get('synthetic_seismic_depth_m', 0.0)):.0f} m",
+            'Rock Mass Condition': (
+                f"RQD {float(row_data.get('synthetic_inferred_rqd', 0.0)):.0f}, "
+                f"GSI {float(row_data.get('synthetic_inferred_gsi', 0.0)):.0f}, "
+                f"structure distance {float(row_data.get('synthetic_distance_to_structure_m', 0.0)):.0f} m"
+            ),
         },
-        'Blast Insight (if relevant)': f"Charge per delay {packet['synthetic_charge_per_delay_kg']:.1f} kg, burden {packet['synthetic_burden_m']:.2f} m, spacing {packet['synthetic_spacing_m']:.2f} m.",
+        'Blast Insight (if relevant)': (
+            f"Charge per delay {float(row_data.get('synthetic_charge_per_delay_kg', 0.0)):.1f} kg, "
+            f"burden {float(row_data.get('synthetic_burden_m', 0.0)):.2f} m, "
+            f"spacing {float(row_data.get('synthetic_spacing_m', 0.0)):.2f} m."
+        ),
         'Confidence Level': _confidence_label(confidence),
         'Class Probabilities': probabilities,
         'Top Drivers': _top_probability_drivers(probabilities) if probabilities else [],

@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SensorPacket(BaseModel):
+    model_config = ConfigDict(extra='allow')
+
     timestamp: datetime
 
     public_distance_to_mineral_m: float = Field(default=500.0, ge=0.0)

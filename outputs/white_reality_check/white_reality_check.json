@@ -1,0 +1,15 @@
+{
+  "benchmark_model": "logistic_regression",
+  "candidate_models": [
+    "random_forest",
+    "hist_gradient_boosting"
+  ],
+  "observed_mean_differentials": {
+    "random_forest": 0.0009644706338463926,
+    "hist_gradient_boosting": 0.030363160626362195
+  },
+  "observed_test_statistic": 0.030363160626362195,
+  "bootstrap_p_value": 0.038,
+  "bootstrap_iterations": 500,
+  "interpretation": "Low p-value suggests the best candidate outperforms the benchmark beyond data-snooping effects."
+}
