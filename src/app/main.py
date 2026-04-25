@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
+from .context_loader import context_summary
 from .inference import score_packet
 from .schemas import SensorPacket
 
@@ -46,6 +47,7 @@ def score(sensor_packet: SensorPacket) -> dict[str, object]:
 def dashboard() -> str:
     metrics = _load_json(DATA_DIR / "metrics.json")
     white_check = _load_json(OUTPUTS_DIR / "white_reality_check" / "white_reality_check.json")
+    context = context_summary()
     candidate_models = metrics.get("candidate_models", {})
 
     plot_files = [
@@ -223,6 +225,9 @@ def dashboard() -> str:
               This local dashboard summarizes the current geotechnical edge-AI prototype:
               WA public regional context, synthetic operational proxies, model validation,
               and screening outputs for rapid engineering review.
+            </p>
+            <p class="sub">
+              Context layer: {context.get('region')} | Deployment: {context.get('deployment_target')}
             </p>
             <div class="metrics">
               <div class="metric">

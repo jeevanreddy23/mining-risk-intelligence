@@ -1,0 +1,111 @@
+{
+  "project_name": "mining-risk-intelligence",
+  "purpose": "Geotechnical edge-AI prototype for underground mining risk screening in Laverton, Western Australia.",
+  "scope": {
+    "region": "Laverton WA",
+    "focus_corridors": [
+      "Granny Smith structural corridor",
+      "Wallaby structural corridor"
+    ],
+    "deployment_target": "Raspberry Pi 5 edge gateway"
+  },
+  "data_sources": {
+    "public_context": [
+      "DMIRS-015 State Linear Structures",
+      "DMIRS-038 Interpreted Bedrock Geology 1:100k",
+      "DMIRS-070 Gravity 400m of WA",
+      "DMIRS-046 Mineral Exploration Drillholes",
+      "MINEDEX",
+      "WAMEX",
+      "Geoscience Australia earthquake catalogue / XML"
+    ],
+    "synthetic_operational": [
+      "synthetic_ppv_mm_s",
+      "synthetic_charge_per_delay_kg",
+      "synthetic_dominant_frequency_hz",
+      "synthetic_inferred_rqd",
+      "synthetic_inferred_gsi",
+      "synthetic_sigma_v_mpa",
+      "synthetic_sigma_h_mpa",
+      "synthetic_seismic_magnitude",
+      "synthetic_seismic_depth_m",
+      "target_label"
+    ]
+  },
+  "feature_groups": {
+    "geology": [
+      "lithology_group",
+      "stiffness_class",
+      "weathering_text",
+      "strength_text"
+    ],
+    "structure": [
+      "distance_to_structure_m",
+      "structure_density",
+      "structural_risk_high"
+    ],
+    "geophysics": [
+      "gravity_value",
+      "regional_eq_count",
+      "regional_eq_max_magnitude",
+      "regional_eq_mean_depth_km"
+    ],
+    "blast_and_seismic": [
+      "ppv_mm_s",
+      "charge_per_delay_kg",
+      "burden_m",
+      "spacing_m",
+      "delay_interval_ms",
+      "dominant_frequency_hz",
+      "seismic_magnitude",
+      "seismic_depth_m"
+    ],
+    "rock_mass": [
+      "rqd",
+      "gsi",
+      "sigma_v_mpa",
+      "sigma_h_mpa",
+      "groundwater"
+    ]
+  },
+  "models": {
+    "current_repo_models": [
+      "logistic_regression",
+      "random_forest",
+      "hist_gradient_boosting"
+    ],
+    "target_models": [
+      "xgboost_classifier",
+      "hidden_markov_model"
+    ],
+    "selection_metric": "macro_f1"
+  },
+  "rule_overrides": [
+    "If structure distance < 50 m then structural risk is high.",
+    "If PPV is elevated and inferred rock quality is poor then raise hazard severity.",
+    "If seismic magnitude and stress proxies are elevated then escalate toward seismic instability."
+  ],
+  "memory_objects": [
+    "repeated high-risk zones",
+    "persistent structural corridors",
+    "historical high-PPV patterns",
+    "low rock-quality intervals"
+  ],
+  "validation": {
+    "primary_checks": [
+      "train/test metrics",
+      "visual diagnostics",
+      "White Reality Check"
+    ],
+    "known_limitations": [
+      "public geology/gravity ingestion not yet fully corrected",
+      "synthetic operational fields are not mine-grade measurements",
+      "prototype labels include proxy logic"
+    ]
+  },
+  "constraints": [
+    "Do not treat public datasets as direct mine-operational measurements.",
+    "Keep public context features separate from synthetic or private operational features.",
+    "Do not overclaim mine-grade validation."
+  ]
+}
