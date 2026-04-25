@@ -145,6 +145,27 @@ Consumes merged-table style features and returns:
 - `Class Probabilities`
 - `Top Drivers`
 
+## Visual Results
+These figures show the current Laverton-focused prototype workflow using WA public context data plus synthetic operational proxies.
+
+### Pre-training
+**Label distribution**
+
+![Pre-training label distribution](outputs/plots/label_distribution.png)
+
+**Feature correlation heatmap**
+
+![Pre-training correlation heatmap](outputs/plots/correlation_heatmap.png)
+
+### Post-training
+**Confusion matrix**
+
+![Post-training confusion matrix](outputs/plots/confusion_matrix.png)
+
+**Prediction confidence distribution**
+
+![Post-training prediction confidence](outputs/plots/prediction_confidence.png)
+
 ## Notes
 - Public datasets provide the regional context layer only.
 - Synthetic fields are placeholders for missing mine-operational data.

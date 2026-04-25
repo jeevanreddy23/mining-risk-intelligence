@@ -43,6 +43,7 @@ def _load_training_table(dataset_path: Path) -> pd.DataFrame:
 
 def _split_columns(df: pd.DataFrame, target_col: str) -> tuple[list[str], list[str]]:
     feature_df = df.drop(columns=[target_col, 'label'], errors='ignore')
+    feature_df = feature_df.dropna(axis=1, how='all')
     numeric_cols = feature_df.select_dtypes(include=['number', 'bool']).columns.tolist()
     categorical_cols = [col for col in feature_df.columns if col not in numeric_cols]
     return numeric_cols, categorical_cols
@@ -57,7 +58,7 @@ def _build_preprocessor(numeric_cols: list[str], categorical_cols: list[str]) ->
     categorical_pipeline = Pipeline(
         steps=[
             ('imputer', SimpleImputer(strategy='most_frequent')),
-            ('onehot', OneHotEncoder(handle_unknown='ignore')),
+            ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False)),
         ]
     )
 
@@ -119,12 +120,15 @@ def train_and_save_model(dataset_path: Path | None = None) -> dict[str, Any]:
     numeric_cols, categorical_cols = _split_columns(dataset, 'target_label')
     preprocessor = _build_preprocessor(numeric_cols, categorical_cols)
 
+    class_counts = y.value_counts()
+    stratify_target = y if int(class_counts.min()) >= 2 else None
+
     x_train, x_test, y_train, y_test = train_test_split(
         x,
         y,
         test_size=0.2,
         random_state=42,
-        stratify=y,
+        stratify=stratify_target,
     )
 
     sample_weight = compute_sample_weight(class_weight='balanced', y=y_train)
@@ -179,6 +183,7 @@ def train_and_save_model(dataset_path: Path | None = None) -> dict[str, Any]:
         'row_count': int(len(dataset)),
         'feature_count': int(x.shape[1]),
         'candidate_models': comparison,
+        'stratified_split_used': stratify_target is not None,
     }
 
     prediction_df = x_test.reset_index(drop=True).copy()
