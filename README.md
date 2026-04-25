@@ -88,6 +88,34 @@ That makes this more than a model repo. It is a **context-aware mining risk work
 
 ---
 
+## ML Pipeline Flow
+
+```mermaid
+flowchart TD
+    A["WA public data<br/>DMIRS / WAMEX / GA seismic"] --> B["Ingestion and conversion<br/>API pulls, XML/CSV, shapefile processing"]
+    B --> C["Feature engineering<br/>lithology, structure distance, gravity, drillhole density"]
+    C --> D["Synthetic operational layer<br/>PPV, stress, blast, RQD/GSI proxies"]
+    D --> E["Merged training table<br/>public context + synthetic operational features"]
+    E --> F["EDA and visual checks<br/>distribution, correlation, class balance"]
+    F --> G["Model training<br/>baseline + candidate classifiers"]
+    G --> H["Validation layer<br/>metrics, plots, White Reality Check"]
+    H --> I["Feature contract<br/>saved schema and defaults"]
+    I --> J["API inference<br/>score payload -> hazard, confidence, alert"]
+    J --> K["Dashboard review<br/>plots, model metrics, decision support"]
+    H --> L["Iterate and refine<br/>fix ingestion, improve labels, reduce bias"]
+    L --> C
+```
+
+This cycle is the operating loop of the project:
+- ingest context
+- build features
+- validate the model
+- lock the feature contract
+- deliver inference
+- refine the system
+
+---
+
 ## Demo
 
 - Dashboard: `http://127.0.0.1:8000/dashboard`
