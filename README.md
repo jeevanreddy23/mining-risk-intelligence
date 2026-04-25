@@ -2,6 +2,64 @@
 
 Geotechnical and edge-AI prototype for mining ground-risk ranking in Western Australia. The project builds a public regional context layer from WA government and Geoscience Australia datasets, adds synthetic operational proxies where mine data is unavailable, trains a tabular ML model, and serves predictions through a FastAPI endpoint.
 
+## Why Use This Project
+
+This repository is a geotechnical edge-AI prototype for underground mining risk screening in Laverton, Western Australia. It is designed to turn regional geology, structures, gravity, drillholes, and seismic context into a practical machine-learning workflow for hazard ranking.
+
+Use this project if you want to:
+- build a mining-focused ML prototype from public geoscience data
+- test geotechnical feature engineering before mine-site data is available
+- demonstrate an edge-deployable hazard scoring workflow
+- show a recruiter or engineering team a full pipeline from data to dashboard to API
+
+This project is most useful when:
+- you are prototyping blast, vibration, or seismic risk workflows
+- you need a proof-of-concept before connecting to private mine systems
+- you want a training, portfolio, or research-grade mining AI pipeline
+- you want a starting point for Raspberry Pi or gateway-style edge deployment
+
+## Benefits
+
+- uses real WA public geoscience datasets for regional context
+- adds synthetic operational proxies only where mine data is unavailable
+- produces ML-ready training tables from messy source data
+- includes model training, validation, visuals, and API inference
+- supports dashboard-style review for quick engineering decisions
+- is structured to later replace synthetic fields with real mine data
+
+## How To Use It
+
+### 1. Review the demo
+- Dashboard: `http://127.0.0.1:8000/dashboard`
+- API Docs: `http://127.0.0.1:8000/docs`
+- Video Walkthrough: [Watch the 90-second demo](https://github.com/jeevanreddy23/mining-risk-intelligence/releases/download/v1.0/mining-risk-intelligence-demo.mp4)
+
+### 2. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Build the prototype pipeline
+```bash
+python scripts/synthetic_operational_data.py --output data/synthetic_operational_data.csv --rows 5000
+python scripts/merge_training_data.py --public-features data/geology_features_with_gravity.csv --synthetic-operational data/synthetic_operational_data.csv --seismic data/regional_seismic_events.csv --output data/final_training_table.csv
+python scripts/train.py
+```
+
+### 4. Generate visual checks
+```bash
+python scripts/visualize_pipeline.py --training-table data/final_training_table.csv --predictions data/test_predictions.csv --feature-importance data/feature_importance.csv --output-dir outputs/plots
+```
+
+### 5. Run the local dashboard and API
+```bash
+uvicorn src.app.main:app --reload
+```
+
+## Important Note
+
+This project is a prototype decision-support workflow. Public datasets provide the regional context layer, while several mine-operational fields are currently simulated as proxies. Results should not be treated as mine-grade validated outputs until real site monitoring, blast, and geotechnical data are integrated.
+
 ## What it does
 - ingests WA public geology, structure, gravity, drillhole, mineralisation, and seismic context
 - engineers spatial features such as structure proximity, drillhole density, mineral proximity, and gravity values
